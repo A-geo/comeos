@@ -22,6 +22,7 @@
 L.mapbox.accessToken = 'pk.eyJ1Ijoiam9yaXNiIiwiYSI6ImNpbHUxMGtkcjAwNTR1am00NHQydDFhMjMifQ.0WurDht28F5Xw4Bb_LlZlQ';
 var map = L.mapbox.map('map', 'mapbox.light')
     .setView([50.64111, 4.668056], 9);
+var zipdata;
 	
 /*
 function getColor(d) {
@@ -50,9 +51,11 @@ var featureLayer = L.mapbox.featureLayer()
   // load GeoJSON from an external file
   $.getJSON('/comeos/cost.geojson',function(data){
     // add GeoJSON layer to the map once the file is loaded
-    L.geoJson(data).addTo(map);
+	zipdata.addData(data);
   });
 
+ L.geoJson(zipdata).addTo(map);
+  
 //add fullscreen button to map
 L.control.fullscreen().addTo(map);
 
