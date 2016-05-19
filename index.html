@@ -40,17 +40,16 @@ function style(feature) {
         fillOpacity: 0.7
     };
 }
-
+/*
 //add zipcode data
 var featureLayer = L.mapbox.featureLayer()
    .loadURL('/comeos/cost.geojson')
    .addTo(map);
-
+*/
 
   // load GeoJSON from an external file
   $.getJSON('/comeos/cost.geojson',function(data){
     // add GeoJSON layer to the map once the file is loaded
-	zipdata.addData(data);
     L.geoJson(data,{style: style}).addTo(map);
   });
 
