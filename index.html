@@ -22,11 +22,32 @@ L.mapbox.accessToken = 'pk.eyJ1Ijoiam9yaXNiIiwiYSI6ImNpbHUxMGtkcjAwNTR1am00NHQyd
 var map = L.mapbox.map('map', 'mapbox.light')
     .setView([50.64111, 4.668056], 9);
 	
-//add airbnb data
+/*
+function getColor(d) {
+    return d > 1000 ? '#B6EDF0' :
+           d > 500  ? '#5CA3E6' :
+                      '#FFEDA0';
+}
+
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.Sum_Sum_Nu),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+//add zipcode data
 var featureLayer = L.mapbox.featureLayer()
    .loadURL('/comeos/cost.geojson')
    .addTo(map);
-	
+*/
+
+L.geoJson('/comeos/cost.geojson').addTo(map);
+
 //add fullscreen button to map
 L.control.fullscreen().addTo(map);
 
