@@ -51,10 +51,11 @@ var featureLayer = L.mapbox.featureLayer()
   // load GeoJSON from an external file
   $.getJSON('/comeos/cost.geojson',function(data){
     // add GeoJSON layer to the map once the file is loaded
-	zipdata.addData(data);
+	zipdata = data
+    
   });
 
- L.geoJson(zipdata).addTo(map);
+L.geoJson(zipdata).addTo(map);
   
 //add fullscreen button to map
 L.control.fullscreen().addTo(map);
