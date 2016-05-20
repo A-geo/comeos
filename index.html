@@ -1,61 +1,132 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset=utf-8 />
-<title>Leaflet Fullscreen</title>
-<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-<script src='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
- <script src="jquery-2.2.3.min.js"></script>
-<link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
-<style>
-  body { margin:0; padding:0; }
-  #map { width:1400px; height:900px; position:absolute; top:0; bottom:0; left:0; right:0; margin:auto;  }
-</style>
-</head>
-<body>
-<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
-<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+	<head>
+		<meta charset=utf-8 />
+		<title>Leaflet Fullscreen</title>
+		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+		<script src='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
+		<script src="jquery-2.2.3.min.js"></script>
+		<script src="jquery-csv.js"></script>
+		<link href='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css' rel='stylesheet' />
+		<style>
+			html, body, #map, .row-fluid{ height: 100%;}
+			#map-wrapper { width: 80%; height: 80%; position: relative; border: 1px solid black; left: 10%; top: 10%}
+			#map {width: 100%; height: 100%; background-color: white;}
+			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px}
+			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px}
+		</style>
+	</head>
 
-<div id='map'></div>
-
-<script>
-L.mapbox.accessToken = 'pk.eyJ1Ijoiam9yaXNiIiwiYSI6ImNpbHUxMGtkcjAwNTR1am00NHQydDFhMjMifQ.0WurDht28F5Xw4Bb_LlZlQ';
-var map = L.mapbox.map('map', 'mapbox.light')
-    .setView([50.64111, 4.668056], 9);
+	<body>
+		<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+		<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+		
+		<div class="span9" style="height:100%">
+			<div id="map-wrapper">
+				<div id="map"></div>
+				<div id="button-wrapper">
+					<form class="form-control">
+						<input type="range" id="DensitySlider" min="0" max="100000" step="1000" class="btnStyle">
+						<input type="button" id="DensityShow" class="btnStyle" value="50,000 parcels per day" /> 
+					</form>
+					<form class="form-control" >
+						<input type="text" id="Btn1" value="Distribution radius" class="btnStyle" />
+						<input type="button" value="Locate!" id="Btn2" class="btnStyle" onclick = "setRadius()" /> 
+					</form>
+				</div>
+			</div>
+		</div>
 	
 
-function getColor(d) {
-    return d > 1000 ? '#B6EDF0' :
-           d > 500  ? '#5CA3E6' :
-                      '#FFEDA0';
-}
 
-function style(feature) {
-    return {
-        fillColor: getColor(feature.properties.Sum_Sum_Nu),
-        weight: 2,
-        opacity: 1,
-        color: 'white',
-        dashArray: '3',
-        fillOpacity: 0.7
-    };
-}
-/*
-//add zipcode data
-var featureLayer = L.mapbox.featureLayer()
-   .loadURL('/comeos/cost.geojson')
-   .addTo(map);
-*/
+		<script>
+		
+			
+		
+			L.mapbox.accessToken = 'pk.eyJ1Ijoiam9yaXNiIiwiYSI6ImNpbHUxMGtkcjAwNTR1am00NHQydDFhMjMifQ.0WurDht28F5Xw4Bb_LlZlQ';
+			var map = L.mapbox.map('map', 'mapbox.light')
+			
+			var editMode = false;
+			var filePath = '/comeos/zip_centroids.csv';
+			var zipdata;
+			
+			//initialize before loading
+			map.on('load', function() {
 
-  // load GeoJSON from an external file
-  $.getJSON('/comeos/cost.geojson',function(data){
-    // add GeoJSON layer to the map once the file is loaded
-    L.geoJson(data,{style: style}).addTo(map);
-  });
+				$.get(filePath,function(data){
+				console.log("win");
+				processData(data);
+				});
+			});
+			
+			//now maps get really loaded
+			map.setView([50.64111, 4.668056], 9);
 
-//add fullscreen button to map
-L.control.fullscreen().addTo(map);
+			//Using double click event for locating distribution center
+			//Prevent zooming on when double clicking
+			map.doubleClickZoom.disable(); 
+			map.on('dblclick', function(e) {
+				console.log("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng)
+			});
+				
+			
 
-</script>
-</body>
+			
+			function processData(csv) {
+				zipdata = $.csv.toObjects(csv)
+			}
+
+			
+			
+			function getColor(d) {
+				return d > 1000 ? '#B6EDF0' :
+					   d > 500  ? '#5CA3E6' :
+								  '#FFEDA0';
+			}
+
+			function style(feature) {
+				return {
+					fillColor: getColor(feature.properties.Sum_Sum_Nu),
+					weight: 2,
+					opacity: 1,
+					color: 'white',
+					dashArray: '3',
+					fillOpacity: 0.7
+				};
+			}
+			
+			function setRadius() {
+				var str1 = "Selected radius = ";
+				var btnstr = "Radius: ";
+				var radius = document.getElementById('Btn1').value;
+				btnstr = btnstr + radius + "km"
+				document.getElementById('Btn1').value = btnstr;
+				editMode = true;				
+			}
+			
+			function setDensity() {
+			//set density of deliveries, multiply number
+				var str1 = " parcels per day";
+				var density = document.getElementById('DensitySlider').value;
+				str1 = Number(density).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").concat(str1);
+				document.getElementById('DensityShow').value = str1;
+			}
+			
+
+				
+			//catch slider change
+			$("#DensitySlider").on("input change", function() { setDensity(); });
+			
+
+			  // load GeoJSON from an external file
+			  $.getJSON('/comeos/cost.geojson',function(data){
+				// add GeoJSON layer to the map once the file is loaded
+				L.geoJson(data,{style: style}).addTo(map);
+			  });
+
+			//add fullscreen button to map
+			L.control.fullscreen().addTo(map);
+
+		</script>
+	</body>
 </html>
