@@ -30,7 +30,7 @@
 						<input type="button" id="DensityShow" class="btnStyle" value="50,000 parcels per day" /> 
 					</form>
 					<form class="form-control" >
-						<input type="text" id="Btn1" value="Distribution radius" class="btnStyle" />
+						<input type="text" id="RadiusButton" value="Distribution radius" class="btnStyle" />
 						<input type="button" value="Locate!" id="Btn2" class="btnStyle" onclick = "setRadius()" /> 
 					</form>
 				</div>
@@ -42,22 +42,49 @@
 		<script>
 		
 			
-		
+			//Global variables
+			var geojson;
 			L.mapbox.accessToken = 'pk.eyJ1Ijoiam9yaXNiIiwiYSI6ImNpbHUxMGtkcjAwNTR1am00NHQydDFhMjMifQ.0WurDht28F5Xw4Bb_LlZlQ';
 			var map = L.mapbox.map('map', 'mapbox.light')
 			
+			//init variables
+			var radius = 50;
+			var nmbrParcels = 50000;
 			var editMode = false;
 			var filePath = '/comeos/zip_centroids.csv';
+			//arrays for containing zipdata
 			var zipdata;
+			var zipsInRadius = new Array();
 			
-			//initialize before loading
+			//Cost variables
+			C1 = 2; //Distance
+			C2 = 2; //TIme
+			C3 = 40; //Van
+			
+			//Only offline; initialise zipcode points
+			/*
+			var zip1 = { Deliveries:"2909",Failed:"289",Zipcode:"2000",x_centroid:"4.3970156",y_centroid:"51.214016",Area:"5.98559",Dist:"", Price:"" };
+			var zip2 = { Deliveries:"1980",Failed:"245",Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"" };
+			var zip3 = { Deliveries:"828",Failed:"154",Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"" };
+			var zip4 = { Deliveries:"909",Failed:"110",Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"" };
+			zipdata = [zip1,zip2,zip3,zip4]*/
+			
+			//initialize before loading, onlin online
 			map.on('load', function() {
-
+				
+				//On server
 				$.get(filePath,function(data){
-				console.log("win");
 				processData(data);
 				});
+
 			});
+			
+			//to read csv, only used online
+			function processData(csv) {
+				zipdata = $.csv.toObjects(csv)
+			}
+
+			
 			
 			//now maps get really loaded
 			map.setView([50.64111, 4.668056], 9);
@@ -66,22 +93,128 @@
 			//Prevent zooming on when double clicking
 			map.doubleClickZoom.disable(); 
 			map.on('dblclick', function(e) {
-				console.log("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng)
-			});
+				console.log("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng);
+				//add point to map
+				if (typeof marker !== 'undefined') {
+					// the marker is defined
+					map.removeLayer(marker)
+				}
 				
+				marker = new L.Marker([e.latlng.lat, e.latlng.lng]);
+				map.addLayer(marker);
+				marker.bindPopup("Distribution facility");
+				var totalDeliveries = 0;
+				
+				zipdata.forEach( function (arrayItem)
+				{
+					dist = distance(e.latlng.lat,e.latlng.lng,arrayItem.y_centroid,arrayItem.x_centroid);
+					if (dist < radius){
+						//calculate new density here, assign it features in map -> make function for it
+						arrayItem.Dist = dist;
+						zipsInRadius.push(arrayItem);
+						totalDeliveries = totalDeliveries + parseInt(arrayItem.Deliveries);
+						str = "distance to " + arrayItem.Zipcode + " is " + dist.toString();
+						console.log(str);
+					}
+					else {
+						arrayItem.Price = 0;
+					}
+					
+				});
+				
+				recalculateDensity(totalDeliveries);
+				restyleLayer();
+				
+				
+			});
 			
+			//calculate new density
+			function recalculateDensity(totalDeliveries) {
+			
+				//calculate new cost and change it in the array.
+				zipsInRadius.forEach( function (arrayItem)
+				{
 
+				  var densityShare = parseInt(arrayItem.Deliveries) / totalDeliveries;
+				  var newNmbrPcls = densityShare * nmbrParcels;
+				  newNmbrPcls = Math.ceil(newNmbrPcls);
+				  var lineHaul = arrayItem.Dist * C1;
+				  var lastMile = Math.sqrt(newNmbrPcls*arrayItem.Area) * C1 + newNmbrPcls*C2;
+				  var vehicleCost = (C3 * newNmbrPcls) / 100;
+				  var pctFailed = arrayItem.Failed/arrayItem.Deliveries;
+				  var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-pctFailed));
+				  arrayItem.Price = totalcost; 
+				
+				});
 			
-			function processData(csv) {
-				zipdata = $.csv.toObjects(csv)
 			}
+			
+			function restyleLayer() {
 
+				geoJson.eachLayer(function(featureInstancelayer) { //loop through each polygon
+					propertyValue = featureInstanceLayer.feature.properties[POSTCODE];
+
+					// Your function that determines a fill color for a particular
+					// property name and value.
+					var myFillColor = getColorViaZipArray(propertyValue);
+					if (myFillColor == "#BBC2C4"){ //grey zones, outside circle
+						featureInstanceLayer.setStyle({
+								fillColor: myFillColor,
+								weight: 1,
+								opacity: 0.2,
+								color: 'white',
+								dashArray: '1',
+								fillOpacity: 0.2
+							});
+					}
+					else {
+					
+						featureInstanceLayer.setStyle({
+							fillColor: myFillColor,
+							weight: 2,
+							opacity: 1,
+							color: 'white',
+							dashArray: '3',
+							fillOpacity: 0.7
+						});
+					}
+				});
+			}
+				
+			function getColorViaZipArray(zipCode) {
+				var result = $.grep(zipdata, function(e){ return e.Zipcode == zipCode; });
+				var prijs = result[0].Price;
+				if (Price != 0){
+					return getColor(Price);
+				}
+				else {
+					return "#BBC2C4";//outside radius
+				}
+			}			
+				
+			//calculate distance between two lat lon points
+			function distance(lat1, lon1, lat2, lon2) {
+				var p = 0.017453292519943295;    // Math.PI / 180
+				var c = Math.cos;
+				var a = 0.5 - c((lat2 - lat1) * p)/2 + 
+					  c(lat1 * p) * c(lat2 * p) * 
+					  (1 - c((lon2 - lon1) * p))/2;
+
+				return 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
+			}
 			
 			
+			//define color depending on feature property
 			function getColor(d) {
-				return d > 1000 ? '#B6EDF0' :
-					   d > 500  ? '#5CA3E6' :
-								  '#FFEDA0';
+				if (d<3) {
+					return '#B6EDF0';
+					}
+				else if (d<5) {
+					return '#5CA3E6';
+					}
+				else{
+					return '#090991';
+					}
 			}
 
 			function style(feature) {
@@ -98,9 +231,10 @@
 			function setRadius() {
 				var str1 = "Selected radius = ";
 				var btnstr = "Radius: ";
-				var radius = document.getElementById('Btn1').value;
-				btnstr = btnstr + radius + "km"
-				document.getElementById('Btn1').value = btnstr;
+				var straal = document.getElementById('RadiusButton').value;
+				btnstr = btnstr + straal + "km";
+				document.getElementById('RadiusButton').value = btnstr;
+				radius = straal;
 				editMode = true;				
 			}
 			
@@ -108,8 +242,10 @@
 			//set density of deliveries, multiply number
 				var str1 = " parcels per day";
 				var density = document.getElementById('DensitySlider').value;
+				nmbrParcels = density;
 				str1 = Number(density).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").concat(str1);
 				document.getElementById('DensityShow').value = str1;
+				//recalculate density 
 			}
 			
 
@@ -121,7 +257,7 @@
 			  // load GeoJSON from an external file
 			  $.getJSON('/comeos/cost.geojson',function(data){
 				// add GeoJSON layer to the map once the file is loaded
-				L.geoJson(data,{style: style}).addTo(map);
+				geoJson = L.geoJson(data,{style: style}).addTo(map);
 			  });
 
 			//add fullscreen button to map
