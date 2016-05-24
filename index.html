@@ -187,7 +187,7 @@
 				  var pctFailed = arrayItem.Failed/arrayItem.Deliveries;
 				  var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-pctFailed));
 				  arrayItem.Price = totalcost; 
-				  console.log("price is: " + totalcost.toString() + ". Linehaul is: " + lineHaul + ". Lastmile: " + lastMile);
+				  console.log("totalDeliveries: " + totalDeliveries + ". price is: " + totalcost.toString() + ". Linehaul is: " + lineHaul + ". Lastmile: " + lastMile + ". Vehicle cost: " + vehicleCost);
 				
 				});
 			
