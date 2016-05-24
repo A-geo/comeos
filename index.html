@@ -152,7 +152,7 @@
 			function restyleLayer() {
 
 				geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
-					propertyValue = featureInstanceLayer.feature.properties[POSTCODE];
+					propertyValue = featureInstanceLayer.feature.properties.POSTCODE;
 
 					// Your function that determines a fill color for a particular
 					// property name and value.
