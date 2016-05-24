@@ -183,9 +183,8 @@
 				
 			function getColorViaZipArray(zipCode) {
 				var result = $.grep(zipdata, function(e){ return e.Zipcode == zipCode; });
-				var prijs = result[0].Price;
-				if (Price != 0){
-					return getColor(Price);
+				if (result[0].Price != 0){
+					return getColor(result[0].Price);
 				}
 				else {
 					return "#BBC2C4";//outside radius
