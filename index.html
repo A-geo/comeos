@@ -13,7 +13,14 @@
 			#map-wrapper { width: 80%; height: 80%; position: relative; border: 1px solid black; left: 10%; top: 10%}
 			#map {width: 100%; height: 100%; background-color: white;}
 			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px}
-			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px}
+			#legend-table { width: 120px; height: 30px; text-align: center; margin-top: 20px; margin-left:40px; border: 1px solid black } 
+			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px; font-family: Garamond; font-size: 15px}
+			.legend-text {font-family: Garamond; font-size: 15px; font-weight: bold}
+			.box{ width:40px; height:20px; border: 1px solid black}
+			.light {background: #B6EDF0}
+			.middle {background: #5CA3E6}
+			.dark {background: #090991}
+			
 		</style>
 	</head>
 
@@ -30,9 +37,24 @@
 						<input type="button" id="DensityShow" class="btnStyle" value="50,000 parcels per day" /> 
 					</form>
 					<form class="form-control" >
-						<input type="text" id="RadiusButton" value="Distribution radius" class="btnStyle" />
+						<input type="range" id="RadiusSlider" min="0" max="300" step="10" class="btnStyle">
+						<input type="button" id="RadiusShow" class="btnStyle" value="Radius: 50km" /> 
 						<input type="button" value="Locate!" id="Btn2" class="btnStyle" onclick = "setRadius()" /> 
 					</form>
+					<table id="legend-table">
+					  <tr>
+						<td><div class="box light"/></td>
+						<td><div class = "legend-text"><€3/stop</div></td> 
+					  </tr>
+					  <tr>
+						<td><div class="box middle"/></td>
+						<td><div class = "legend-text">€3-5/stop</div></td> 
+					  </tr>
+					  <tr>
+						<td><div class="box dark"/></td>
+						<td><div class = "legend-text">>€5/stop</div></td> 
+					  </tr>
+					</table>
 				</div>
 			</div>
 		</div>
@@ -67,16 +89,16 @@
 			var zip2 = { Deliveries:"1980",Failed:"245",Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"" };
 			var zip3 = { Deliveries:"828",Failed:"154",Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"" };
 			var zip4 = { Deliveries:"909",Failed:"110",Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"" };
-			zipdata = [zip1,zip2,zip3,zip4]*/
-			
-			//initialize before loading, onlin online
+			zipdata = [zip1,zip2,zip3,zip4]
+			*/
+			//initialize before loading, online
 			map.on('load', function() {
 				
 				//On server
 				$.get(filePath,function(data){
 				processData(data);
 				});
-
+				
 			});
 			
 			//to read csv, only used online
@@ -104,6 +126,7 @@
 				map.addLayer(marker);
 				marker.bindPopup("Distribution facility");
 				var totalDeliveries = 0;
+				zipsInRadius = [];
 				
 				zipdata.forEach( function (arrayItem)
 				{
@@ -134,7 +157,7 @@
 				//calculate new cost and change it in the array.
 				zipsInRadius.forEach( function (arrayItem)
 				{
-
+				
 				  var densityShare = parseInt(arrayItem.Deliveries) / totalDeliveries;
 				  var newNmbrPcls = densityShare * nmbrParcels;
 				  newNmbrPcls = Math.ceil(newNmbrPcls);
@@ -228,12 +251,13 @@
 			}
 			
 			function setRadius() {
-				var str1 = "Selected radius = ";
-				var btnstr = "Radius: ";
-				var straal = document.getElementById('RadiusButton').value;
-				btnstr = btnstr + straal + "km";
-				document.getElementById('RadiusButton').value = btnstr;
+			//set radius of deliveries
+				var str1 = "Radius: ";
+				var straal = document.getElementById('RadiusSlider').value;
 				radius = straal;
+				str1 = str1 + Number(straal) + "km"
+				document.getElementById('RadiusShow').value = str1;
+				
 				editMode = true;				
 			}
 			
@@ -247,16 +271,26 @@
 				//recalculate density 
 			}
 			
+			function onEachFeature(feature, layer) {
+				// does this feature have a property named popupContent?
+				layer.bindPopup(feature.properties.POSTCODE);
+				
+			}
+
+			
 
 				
-			//catch slider change
+			//catch slider change density
+			$("#RadiusSlider").on("input change", function() { setRadius(); });
+			
+			//catch slider change radius
 			$("#DensitySlider").on("input change", function() { setDensity(); });
 			
 
 			  // load GeoJSON from an external file
 			  $.getJSON('/comeos/cost.geojson',function(data){
 				// add GeoJSON layer to the map once the file is loaded
-				geoJson = L.geoJson(data,{style: style}).addTo(map);
+				geoJson = L.geoJson(data,{style: style}, {onEachFeature:onEachFeature}).addTo(map);
 			  });
 
 			//add fullscreen button to map
