@@ -72,8 +72,10 @@
 			//init variables
 			var radius = 50;
 			var nmbrParcels = 50000;
-			var editMode = false;
-			var filePath = '/comeos/zip_centroids.csv';
+			var totalDeliveries = 0;
+			var filePath = '/comeos/zipcodes_centroids_BE.csv';
+			var latMarker;
+			var lonMarker;
 			//arrays for containing zipdata
 			var zipdata;
 			var zipsInRadius = new Array();
@@ -95,6 +97,7 @@
 			map.on('load', function() {
 				
 				//On server
+				
 				$.get(filePath,function(data){
 				processData(data);
 				});
@@ -115,22 +118,31 @@
 			//Prevent zooming on when double clicking
 			map.doubleClickZoom.disable(); 
 			map.on('dblclick', function(e) {
-				console.log("Lat, Lon : " + e.latlng.lat + ", " + e.latlng.lng);
 				//add point to map
 				if (typeof marker !== 'undefined') {
 					// the marker is defined
 					map.removeLayer(marker)
 				}
 				
+				lonMarker = e.latlng.lng;
+				latMarker = e.latlng.lat;
+				
 				marker = new L.Marker([e.latlng.lat, e.latlng.lng]);
 				map.addLayer(marker);
 				marker.bindPopup("Distribution facility");
-				var totalDeliveries = 0;
+				
+				findZipsInRadius();
+				
+			});
+			
+			//find zipcodes within radius, call functions for price calculation and styling
+			function findZipsInRadius() {
+				totalDeliveries = 0;
 				zipsInRadius = [];
 				
 				zipdata.forEach( function (arrayItem)
 				{
-					dist = distance(e.latlng.lat,e.latlng.lng,arrayItem.y_centroid,arrayItem.x_centroid);
+					dist = distance(latMarker,lonMarker,arrayItem.y_centroid,arrayItem.x_centroid);
 					if (dist < radius){
 						//calculate new density here, assign it features in map -> make function for it
 						arrayItem.Dist = dist;
@@ -145,14 +157,13 @@
 					
 				});
 				
-				recalculateDensity(totalDeliveries);
+				recalculateDensity();
 				restyleLayer();
-				
-				
-			});
+			}
+			
 			
 			//calculate new density
-			function recalculateDensity(totalDeliveries) {
+			function recalculateDensity() {
 			
 				//calculate new cost and change it in the array.
 				zipsInRadius.forEach( function (arrayItem)
@@ -167,6 +178,8 @@
 				  var pctFailed = arrayItem.Failed/arrayItem.Deliveries;
 				  var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-pctFailed));
 				  arrayItem.Price = totalcost; 
+				  var tekst = "Price is: " + totalcost.toFixed(2).toString() + " Linehaul is: " + lineHaul.toFixed(2).toString();
+				  console.log(tekst);
 				
 				});
 			
@@ -239,14 +252,15 @@
 					}
 			}
 
+			//Style when loading zipcodes -> all grey
 			function style(feature) {
 				return {
-					fillColor: getColor(feature.properties.Sum_Sum_Nu),
-					weight: 2,
-					opacity: 1,
+					fillColor: "#BBC2C4",
+					weight: 1,
+					opacity: 0.2,
 					color: 'white',
-					dashArray: '3',
-					fillOpacity: 0.7
+					dashArray: '1',
+					fillOpacity: 0.4
 				};
 			}
 			
@@ -257,18 +271,18 @@
 				radius = straal;
 				str1 = str1 + Number(straal) + "km"
 				document.getElementById('RadiusShow').value = str1;
-				
-				editMode = true;				
+				findZipsInRadius();			
 			}
 			
 			function setDensity() {
-			//set density of deliveries, multiply number
+				//set density of deliveries, multiply number
 				var str1 = " parcels per day";
 				var density = document.getElementById('DensitySlider').value;
 				nmbrParcels = density;
 				str1 = Number(density).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").concat(str1);
 				document.getElementById('DensityShow').value = str1;
-				//recalculate density 
+				//recalculate density for each zipCode
+				recalculateDensity();
 			}
 			
 			function onEachFeature(feature, layer) {
@@ -277,9 +291,7 @@
 				
 			}
 
-			
 
-				
 			//catch slider change density
 			$("#RadiusSlider").on("input change", function() { setRadius(); });
 			
@@ -287,11 +299,11 @@
 			$("#DensitySlider").on("input change", function() { setDensity(); });
 			
 
-			  // load GeoJSON from an external file
-			  $.getJSON('/comeos/cost.geojson',function(data){
+			 // load GeoJSON from an external file
+			 $.getJSON('/comeos/zipcodes_be.geojson',function(data){
 				// add GeoJSON layer to the map once the file is loaded
 				geoJson = L.geoJson(data,{style: style}, {onEachFeature:onEachFeature}).addTo(map);
-			  });
+			});
 
 			//add fullscreen button to map
 			L.control.fullscreen().addTo(map);
