@@ -331,7 +331,7 @@
 			 // load GeoJSON from an external file
 			 $.getJSON('/comeos/zipcodes_be.geojson',function(data){
 				// add GeoJSON layer to the map once the file is loaded
-				geoJson = L.geoJson(data,{style: style}, {onEachFeature:onEachFeature}).addTo(map);
+				geoJson = L.geoJson(data,{style: style, onEachFeature:onEachFeature}).addTo(map);
 			});
 
 			//add fullscreen button to map
