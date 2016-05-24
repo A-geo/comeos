@@ -37,7 +37,7 @@
 						<input type="button" id="DensityShow" class="btnStyle" value="50,000 parcels per day" /> 
 					</form>
 					<form class="form-control" >
-						<input type="range" id="RadiusSlider" min="0" max="300" step="10" class="btnStyle">
+						<input type="range" id="RadiusSlider" min="0" max="200" step="10" class="btnStyle" value=50>
 						<input type="button" id="RadiusShow" class="btnStyle" value="Radius: 50km" /> 
 						<input type="button" value="Reset" id="Btn2" class="btnStyle" onclick = "resetMap()" /> 
 					</form>
@@ -91,7 +91,8 @@
 			var zip2 = { Deliveries:"1980",Failed:"245",Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"" };
 			var zip3 = { Deliveries:"828",Failed:"154",Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"" };
 			var zip4 = { Deliveries:"909",Failed:"110",Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"" };
-			zipdata = [zip1,zip2,zip3,zip4]*/
+			zipdata = [zip1,zip2,zip3,zip4]
+			/*
 			
 			//initialize before loading, online
 			map.on('load', function() {
@@ -122,6 +123,7 @@
 			function onEachFeature(feature, layer) {
 				//bind click
 				layer.on('dblclick', whenClicked);		
+				console.log("in oneachfeature");
 			}
 			
 			//actions when dblclicked: create marker + calculate prices
