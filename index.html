@@ -39,7 +39,7 @@
 					<form class="form-control" >
 						<input type="range" id="RadiusSlider" min="0" max="300" step="10" class="btnStyle">
 						<input type="button" id="RadiusShow" class="btnStyle" value="Radius: 50km" /> 
-						<input type="button" value="Locate!" id="Btn2" class="btnStyle" onclick = "setRadius()" /> 
+						<input type="button" value="Reset" id="Btn2" class="btnStyle" onclick = "resetMap()" /> 
 					</form>
 					<table id="legend-table">
 					  <tr>
@@ -91,8 +91,8 @@
 			var zip2 = { Deliveries:"1980",Failed:"245",Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"" };
 			var zip3 = { Deliveries:"828",Failed:"154",Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"" };
 			var zip4 = { Deliveries:"909",Failed:"110",Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"" };
-			zipdata = [zip1,zip2,zip3,zip4]
-			*/
+			zipdata = [zip1,zip2,zip3,zip4]*/
+			
 			//initialize before loading, online
 			map.on('load', function() {
 				
@@ -104,21 +104,29 @@
 				
 			});
 			
+			//Prevent zooming on when double clicking
+			map.doubleClickZoom.disable(); 
+			
 			//to read csv, only used online
 			function processData(csv) {
 				zipdata = $.csv.toObjects(csv)
 			}
 
-			
-			
 			//now maps get really loaded
 			map.setView([50.64111, 4.668056], 9);
 
-			//Using double click event for locating distribution center
-			//Prevent zooming on when double clicking
-			map.doubleClickZoom.disable(); 
-			map.on('dblclick', function(e) {
-				//add point to map
+			//catch dblclick on map
+			map.on('dblclick', whenClicked);
+			
+			//catch dblclick on geojson layer
+			function onEachFeature(feature, layer) {
+				//bind click
+				layer.on('dblclick', whenClicked);		
+			}
+			
+			//actions when dblclicked: create marker + calculate prices
+			function whenClicked(e) {
+				//check if marker exists
 				if (typeof marker !== 'undefined') {
 					// the marker is defined
 					map.removeLayer(marker)
@@ -126,14 +134,14 @@
 				
 				lonMarker = e.latlng.lng;
 				latMarker = e.latlng.lat;
-				
+				//create marker
 				marker = new L.Marker([e.latlng.lat, e.latlng.lng]);
 				map.addLayer(marker);
 				marker.bindPopup("Distribution facility");
-				
-				findZipsInRadius();
-				
-			});
+				//find zips in radius
+				findZipsInRadius(); 
+			}
+
 			
 			//find zipcodes within radius, call functions for price calculation and styling
 			function findZipsInRadius() {
@@ -148,8 +156,8 @@
 						arrayItem.Dist = dist;
 						zipsInRadius.push(arrayItem);
 						totalDeliveries = totalDeliveries + parseInt(arrayItem.Deliveries);
-						str = "distance to " + arrayItem.Zipcode + " is " + dist.toString();
-						console.log(str);
+						//str = "distance to " + arrayItem.Zipcode + " is " + dist.toString();
+						//console.log(str);
 					}
 					else {
 						arrayItem.Price = 0;
@@ -158,7 +166,7 @@
 				});
 				
 				recalculateDensity();
-				restyleLayer();
+				restyleLayer('color');
 			}
 			
 			
@@ -178,43 +186,58 @@
 				  var pctFailed = arrayItem.Failed/arrayItem.Deliveries;
 				  var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-pctFailed));
 				  arrayItem.Price = totalcost; 
-				  var tekst = "Price is: " + totalcost.toFixed(2).toString() + " Linehaul is: " + lineHaul.toFixed(2).toString();
-				  console.log(tekst);
 				
 				});
 			
 			}
 			
-			function restyleLayer() {
-
-				geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
-					propertyValue = featureInstanceLayer.feature.properties.POSTCODE;
-
-					// Your function that determines a fill color for a particular
-					// property name and value.
-					var myFillColor = getColorViaZipArray(propertyValue);
-					if (myFillColor == "#BBC2C4"){ //grey zones, outside circle
-						featureInstanceLayer.setStyle({
-								fillColor: myFillColor,
-								weight: 1,
-								opacity: 0.2,
-								color: 'white',
-								dashArray: '1',
-								fillOpacity: 0.4
-							});
-					}
-					else {
+			function restyleLayer(whatToDo) {
+				
+				if (whatToDo == 'color') {
+					geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
 					
+						propertyValue = featureInstanceLayer.feature.properties.POSTCODE;
+
+						// Your function that determines a fill color for a particular
+						// property name and value.
+						var myFillColor = getColorViaZipArray(propertyValue);
+						if (myFillColor == "#BBC2C4"){ //grey zones, outside circle
+							featureInstanceLayer.setStyle({
+									fillColor: myFillColor,
+									weight: 1,
+									opacity: 0.2,
+									color: 'white',
+									dashArray: '1',
+									fillOpacity: 0.4
+								});
+						}
+						else {
+						
+							featureInstanceLayer.setStyle({
+								fillColor: myFillColor,
+								weight: 2,
+								opacity: 1,
+								color: 'white',
+								dashArray: '3',
+								fillOpacity: 0.7
+							});
+						}
+					});
+				}
+				//when resetting layer, everyting to gray
+				else if (whatToDo == 'reset') {
+					geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
 						featureInstanceLayer.setStyle({
-							fillColor: myFillColor,
-							weight: 2,
-							opacity: 1,
+							fillColor: '#BBC2C4',
+							weight: 1,
+							opacity: 0.2,
 							color: 'white',
-							dashArray: '3',
-							fillOpacity: 0.7
+							dashArray: '1',
+							fillOpacity: 0.4
 						});
-					}
-				});
+					});
+				}
+			
 			}
 				
 			function getColorViaZipArray(zipCode) {
@@ -264,6 +287,19 @@
 				};
 			}
 			
+			function resetMap() {
+			
+				//Delete marker
+				//check if marker exists
+				if (typeof marker !== 'undefined') {
+					// the marker is defined
+					map.removeLayer(marker)
+				}
+				//reset style to default
+				restyleLayer('reset');
+			
+			}
+			
 			function setRadius() {
 			//set radius of deliveries
 				var str1 = "Radius: ";
@@ -283,14 +319,7 @@
 				document.getElementById('DensityShow').value = str1;
 				//recalculate density for each zipCode
 				recalculateDensity();
-			}
-			
-			function onEachFeature(feature, layer) {
-				// does this feature have a property named popupContent?
-				layer.bindPopup(feature.properties.POSTCODE);
-				
-			}
-
+			}			
 
 			//catch slider change density
 			$("#RadiusSlider").on("input change", function() { setRadius(); });
