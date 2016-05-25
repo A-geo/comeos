@@ -178,8 +178,8 @@
 				
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
 				var weightedCost = totalCostRadius/parcelsInRadius;
-				document.getElementById("weight_cost_stop").innerHTML = weightedCost.toFixed(2).toString();
-				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
+				document.getElementById("weight_cost_stop").innerHTML =  "€" + weightedCost.toFixed(2).toString();
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString() + "%";
 				
 			}
 			
