@@ -16,9 +16,9 @@
 			#legend-table { width: 120px; height: 30px; text-align: center; margin-top: 20px; margin-left:40px; border: 1px solid black } 
 			#value-table { width: 180px; height: 30px; text-align: center; margin-top: 20px; margin-left:10px } 
 			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px; font-family: Garamond; font-size: 15px}
-			.value-value { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 80px; line-height:30px; height: 30px; text-align: center; margin-top: 10px; margin-left:50px; font-family: Garamond; font-size: 17px; font-weight: bold}
+			.value-value { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 80px; line-height:30px; height: 30px; text-align: center; margin-top: 10px; margin-left:50px; font-family: Garamond; font-size: 15px; font-weight: bold}
 			.legend-text {font-family: Garamond; font-size: 15px; font-weight: bold}
-			.value-text {font-family: Garamond; font-size: 18px; font-weight: bold}
+			.value-text {font-family: Garamond; font-size: 16px; font-weight: bold}
 			.box{ width:40px; height:20px; border: 1px solid black}
 			.light {background: #B6EDF0}
 			.middle {background: #5CA3E6}
@@ -177,7 +177,8 @@
 				});
 				
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
-				weightedCost
+				var weightedCost = totalCostRadius/nmbrParcels;
+				document.getElementById("weight_cost_stop").innerHTML = weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
 				
 			}
@@ -216,6 +217,8 @@
 				});
 				
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
+				var weightedCost = totalCostRadius/nmbrParcels;
+				document.getElementById("weight_cost_stop").innerHTML = weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
 			
 			}
