@@ -65,7 +65,7 @@
 						<div class="value-text" >Weighted cost per stop:</div>
 						<div id="weight_cost_stop" class="value-value">€0</div>
 						<div class="value-text">% of demand in radius:</div>
-						<div id="pct_demand_radius" class="value-value">0</div>
+						<div id="pct_demand_radius" class="value-value">0%</div>
 					</div>
 				</div>
 			</div>
@@ -177,7 +177,7 @@
 				});
 				
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
-				var weightedCost = totalCostRadius/nmbrParcels;
+				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML = weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
 				
@@ -216,10 +216,10 @@
 				
 				});
 				
-				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
+				var pctParcelsRadius = parcelsInRadius/nmbrParcels*100;
 				var weightedCost = totalCostRadius/nmbrParcels;
-				document.getElementById("weight_cost_stop").innerHTML = weightedCost.toFixed(2).toString();
-				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
+				document.getElementById("weight_cost_stop").innerHTML = "€" + weightedCost.toFixed(2).toString();
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString() + "%";
 			
 			}
 			
@@ -308,7 +308,9 @@
 				geoJson.eachLayer(function(featureInstanceLayer) {
 					restyleLayer('#BBC2C4',featureInstanceLayer);
 				});
-				
+				//reset values
+				document.getElementById("weight_cost_stop").innerHTML = "€0";
+				document.getElementById("pct_demand_radius").innerHTML = "0%";
 			
 			}
 			
