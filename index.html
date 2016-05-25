@@ -176,7 +176,7 @@
 				
 				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				var lineHaul = dist * C1 * C4 * 2 * newNmbrPcls / 100;
-				var lastMile = Math.sqrt(newNmbrPcls*featureInstanceLayer.feature.properties.Area) * C1 * C4 + newNmbrPcls*C2;
+				var lastMile = Math.sqrt(newNmbrPcls*featureInstanceLayer.feature.properties.AREA) * C1 * C4 + newNmbrPcls*C2;
 				var vehicleCost = (C3 * newNmbrPcls) / 100;
 				var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-featureInstanceLayer.feature.properties.FDR));
 				console.log("totalDeliveries in zip: " + newNmbrPcls.toString() + ". price is: " + totalcost.toFixed(2).toString() + ". Linehaul is: " + lineHaul.toFixed(2).toString() + ". Lastmile: " + lastMile.toFixed(2).toString() + ". Vehicle cost: " + vehicleCost.toFixed(2).toString());
