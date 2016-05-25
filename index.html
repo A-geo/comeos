@@ -196,6 +196,7 @@
 				var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-featureInstanceLayer.feature.properties.FDR));
 				totalCostRadius = totalCostRadius + totalcost*newNmbrPcls;//adds the zipcodes share of total cost
 				console.log("totalDeliveries in zip: " + newNmbrPcls.toString() + ". price is: " + totalcost.toFixed(2).toString() + ". Linehaul is: " + lineHaul.toFixed(2).toString() + ". Lastmile: " + lastMile.toFixed(2).toString() + ". Vehicle cost: " + vehicleCost.toFixed(2).toString());
+				console.log("totalCostRadius : " + totalCostRadius.toString());
 				return getColor(totalcost);
 			}
 			
