@@ -190,6 +190,9 @@
 				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				//count nmbr parcels in radius
 				parcelsInRadius = parcelsInRadius + newNmbrPcls;
+				if (newNmbrPcls = 0) {
+					console.log("parcels = 0 ");
+				}
 				var lineHaul = dist * C1 * C4 * 2 * newNmbrPcls / 100;
 				var lastMile = Math.sqrt(newNmbrPcls*featureInstanceLayer.feature.properties.AREA) * C1 * C4 + newNmbrPcls*C2;
 				var vehicleCost = (C3 * newNmbrPcls) / 100;
