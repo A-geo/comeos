@@ -12,14 +12,18 @@
 			html, body, #map, .row-fluid{ height: 100%;}
 			#map-wrapper { width: 80%; height: 80%; position: relative; border: 1px solid black; left: 10%; top: 10%}
 			#map {width: 100%; height: 100%; background-color: white;}
-			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px}
+			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px; height: 520px}
 			#legend-table { width: 120px; height: 30px; text-align: center; margin-top: 20px; margin-left:40px; border: 1px solid black } 
+			#value-table { width: 180px; height: 30px; text-align: center; margin-top: 20px; margin-left:10px } 
 			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px; font-family: Garamond; font-size: 15px}
+			.value-value { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 80px; line-height:30px; height: 30px; text-align: center; margin-top: 10px; margin-left:50px; font-family: Garamond; font-size: 17px; font-weight: bold}
 			.legend-text {font-family: Garamond; font-size: 15px; font-weight: bold}
+			.value-text {font-family: Garamond; font-size: 18px; font-weight: bold}
 			.box{ width:40px; height:20px; border: 1px solid black}
 			.light {background: #B6EDF0}
 			.middle {background: #5CA3E6}
 			.dark {background: #090991}
+			.horiz-line {border: 2px dashed #3079ED; margin-top:20px}
 			
 		</style>
 	</head>
@@ -41,6 +45,7 @@
 						<input type="button" id="RadiusShow" class="btnStyle" value="Radius: 50km" /> 
 						<input type="button" value="Reset" id="Btn2" class="btnStyle" onclick = "resetMap()" /> 
 					</form>
+					<hr class="horiz-line">
 					<table id="legend-table">
 					  <tr>
 						<td><div class="box light"/></td>
@@ -55,6 +60,13 @@
 						<td><div class = "legend-text">>€5/stop</div></td> 
 					  </tr>
 					</table>
+					<hr class="horiz-line">
+					<div id="value-table">
+						<div class="value-text" >Weighted cost per stop:</div>
+						<div id="weight_cost_stop" class="value-value">€0</div>
+						<div class="value-text">% of demand in radius:</div>
+						<div id="pct_demand_radius" class="value-value">0</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -72,11 +84,13 @@
 			//init variables
 			var radius = 50;
 			var nmbrParcels = 50000;
+			//variables for showing value in html
+			var parcelsInRadius = 0;
+			var totalCostRadius = 0;
 			//var filePath = '/comeos/zipcodes_centroids_BE.csv';
 			var latMarker;
 			var lonMarker;
 			//arrays for containing zipdata
-			var zipdata;
 			var zipdistance = [];
 			
 			//Cost variables
@@ -85,15 +99,7 @@
 			C3 = 32.5; //Van
 			C4 = 1.3; //To randomize euclidean something
 			
-			//Only offline; initialise zipcode points
 			/*
-			var zip1 = { Zipcode:"2000",x_centroid:"4.3970156",y_centroid:"51.214016",Area:"5.98559",Dist:"", Price:"",Share:"0.439028",FDR:"0.099347" };
-			var zip2 = { Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"",Share:"0.298823",FDR:"0.123737" };
-			var zip3 = { Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"",Share:"0.124962",FDR:"0.18599" };
-			var zip4 = { Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"",Share:"0.137187",FDR:"0.121012" };
-			zipdata = [zip1,zip2,zip3,zip4]
-			
-			
 			//initialize before loading, online
 			map.on('load', function() {
 				
@@ -147,6 +153,8 @@
 			
 			//find zipcodes within radius, call functions for price calculation and styling
 			function findZipsInRadius() {
+				parcelsInRadius = 0;
+				totalCostRadius = 0;
 				zipdistance = [];//reset array with distances to zips.
 				geoJson.eachLayer(function(featureInstanceLayer) {
 					
@@ -168,6 +176,10 @@
 					restyleLayer(color,featureInstanceLayer);
 				});
 				
+				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
+				weightedCost
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
+				
 			}
 			
 			
@@ -175,17 +187,21 @@
 			function calculateDensityForColor(featureInstanceLayer,dist) {
 				
 				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
+				//count nmbr parcels in radius
+				parcelsInRadius = parcelsInRadius + newNmbrPcls;
 				var lineHaul = dist * C1 * C4 * 2 * newNmbrPcls / 100;
 				var lastMile = Math.sqrt(newNmbrPcls*featureInstanceLayer.feature.properties.AREA) * C1 * C4 + newNmbrPcls*C2;
 				var vehicleCost = (C3 * newNmbrPcls) / 100;
 				var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-featureInstanceLayer.feature.properties.FDR));
+				totalCostRadius = totalCostRadius + totalcost*newNmbrPcls;//adds the zipcodes share of total cost
 				console.log("totalDeliveries in zip: " + newNmbrPcls.toString() + ". price is: " + totalcost.toFixed(2).toString() + ". Linehaul is: " + lineHaul.toFixed(2).toString() + ". Lastmile: " + lastMile.toFixed(2).toString() + ". Vehicle cost: " + vehicleCost.toFixed(2).toString());
 				return getColor(totalcost);
 			}
 			
 			//recalculate density when densitychange is triggered
 			function recalculateDensityFromSlider() {
-				
+				parcelsInRadius = 0;
+				totalCostRadius = 0;
 				geoJson.eachLayer(function(featureInstanceLayer) {
 				
 					var result = $.grep(zipdistance, function(e){ return e.Zipcode == featureInstanceLayer.feature.properties.POSTCODE; });
@@ -198,6 +214,9 @@
 					}
 				
 				});
+				
+				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString();
 			
 			}
 			
@@ -282,8 +301,11 @@
 					// the marker is defined
 					map.removeLayer(marker)
 				}
-				//reset style to default
-				restyleLayer('reset');
+				//for each polycong, reset style to default
+				geoJson.eachLayer(function(featureInstanceLayer) {
+					restyleLayer('#BBC2C4',featureInstanceLayer);
+				});
+				
 			
 			}
 			
