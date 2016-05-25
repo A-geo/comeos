@@ -72,27 +72,27 @@
 			//init variables
 			var radius = 50;
 			var nmbrParcels = 50000;
-			var totalDeliveries = 0;
-			var filePath = '/comeos/zipcodes_centroids_BE.csv';
+			//var filePath = '/comeos/zipcodes_centroids_BE.csv';
 			var latMarker;
 			var lonMarker;
 			//arrays for containing zipdata
 			var zipdata;
-			var zipsInRadius = new Array();
+			var zipdistance = [];
 			
 			//Cost variables
 			C1 = 1.3; //Distance
 			C2 = 0.7; //Time
 			C3 = 32.5; //Van
+			C4 = 1.3; //To randomize euclidean something
 			
 			//Only offline; initialise zipcode points
 			/*
-			var zip1 = { Deliveries:"2909",Failed:"289",Zipcode:"2000",x_centroid:"4.3970156",y_centroid:"51.214016",Area:"5.98559",Dist:"", Price:"" };
-			var zip2 = { Deliveries:"1980",Failed:"245",Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"" };
-			var zip3 = { Deliveries:"828",Failed:"154",Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"" };
-			var zip4 = { Deliveries:"909",Failed:"110",Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"" };
+			var zip1 = { Zipcode:"2000",x_centroid:"4.3970156",y_centroid:"51.214016",Area:"5.98559",Dist:"", Price:"",Share:"0.439028",FDR:"0.099347" };
+			var zip2 = { Zipcode:"2018",x_centroid:"4.4165101",y_centroid:"51.2059669",Area:"3.692569",Dist:"",Price:"",Share:"0.298823",FDR:"0.123737" };
+			var zip3 = { Zipcode:"2060",x_centroid:"4.4278717",y_centroid:"51.2275772",Area:"3.015491",Dist:"",Price:"",Share:"0.124962",FDR:"0.18599" };
+			var zip4 = { Zipcode:"2140",x_centroid:"4.4450879",y_centroid:"51.2114944",Area:"3.807113",Dist:"",Price:"",Share:"0.137187",FDR:"0.121012" };
 			zipdata = [zip1,zip2,zip3,zip4]
-			*/
+			
 			
 			//initialize before loading, online
 			map.on('load', function() {
@@ -104,6 +104,7 @@
 				});
 				
 			});
+			*/
 			
 			//Prevent zooming on when double clicking
 			map.doubleClickZoom.disable(); 
@@ -146,103 +147,87 @@
 			
 			//find zipcodes within radius, call functions for price calculation and styling
 			function findZipsInRadius() {
-				totalDeliveries = 0;
-				zipsInRadius = [];
-				
-				zipdata.forEach( function (arrayItem)
-				{
-					dist = distance(latMarker,lonMarker,arrayItem.y_centroid,arrayItem.x_centroid);
+				zipdistance = [];//reset array with distances to zips.
+				geoJson.eachLayer(function(featureInstanceLayer) {
+					
+					var dist = distance(latMarker,lonMarker,featureInstanceLayer.feature.properties.LAT,featureInstanceLayer.feature.properties.LON);
+					
 					if (dist < radius){
-						//calculate new density here, assign it features in map -> make function for it
-						arrayItem.Dist = dist;
-						zipsInRadius.push(arrayItem);
-						totalDeliveries = totalDeliveries + parseInt(arrayItem.Deliveries);
-						//str = "distance to " + arrayItem.Zipcode + " is " + dist.toString();
-						//console.log(str);
+						//save zip in array zipdistance for faster processing of density change
+						var obj = new Object()
+						obj.Zipcode = featureInstanceLayer.feature.properties.POSTCODE;
+						obj.Distance = dist;
+						zipdistance.push(obj);
+						//calculate new density here, assign it to features in map -> make function for it
+						color = calculateDensityForColor(featureInstanceLayer,dist);
 					}
 					else {
-						arrayItem.Price = 0;
+						color = "#BBC2C4"
 					}
 					
+					restyleLayer(color,featureInstanceLayer);
 				});
 				
-				recalculateDensity();
-				restyleLayer('color');
 			}
 			
 			
 			//calculate new density
-			function recalculateDensity() {
-			
-				//calculate new cost and change it in the array.
-				zipsInRadius.forEach( function (arrayItem)
-				{
+			function calculateDensityForColor(featureInstanceLayer,dist) {
 				
-				  var densityShare = parseInt(arrayItem.Deliveries) / totalDeliveries;
-				  var newNmbrPcls = densityShare * nmbrParcels;
-				  newNmbrPcls = Math.ceil(newNmbrPcls);
-				  var lineHaul = arrayItem.Dist * C1;
-				  var lastMile = Math.sqrt(newNmbrPcls*arrayItem.Area) * C1 + newNmbrPcls*C2;
-				  var vehicleCost = (C3 * newNmbrPcls) / 100;
-				  var pctFailed = arrayItem.Failed/arrayItem.Deliveries;
-				  var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-pctFailed));
-				  arrayItem.Price = totalcost; 
-				  console.log("totalDeliveries: " + totalDeliveries + ". price is: " + totalcost.toString() + ". Linehaul is: " + lineHaul + ". Lastmile: " + lastMile + ". Vehicle cost: " + vehicleCost);
+				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
+				var lineHaul = dist * C1 * C4 * 2 * newNmbrPcls / 100;
+				var lastMile = Math.sqrt(newNmbrPcls*featureInstanceLayer.feature.properties.Area) * C1 * C4 + newNmbrPcls*C2;
+				var vehicleCost = (C3 * newNmbrPcls) / 100;
+				var totalcost = (lineHaul+lastMile+vehicleCost) / (newNmbrPcls * (1-featureInstanceLayer.feature.properties.FDR));
+				console.log("totalDeliveries: " + totalDeliveries + ". price is: " + totalcost.toString() + ". Linehaul is: " + lineHaul + ". Lastmile: " + lastMile + ". Vehicle cost: " + vehicleCost);
+				return getColor(totalcost);
+			}
+			
+			//recalculate density when densitychange is triggered
+			function recalculateDensityFromSlider() {
+				
+				geoJson.eachLayer(function(featureInstanceLayer) {
+				
+					var result = $.grep(zipdistance, function(e){ return e.Zipcode == featureInstanceLayer.feature.properties.POSTCODE; });
+					if (result.length == 0) {
+					  // not found
+					} else {
+					  // object found, recalculate density
+					  color = calculateDensityForColor(featureInstanceLayer,result[0].Distance;
+					  restyleLayer(color,featureInstanceLayer);
+					}
 				
 				});
 			
 			}
 			
-			function restyleLayer(whatToDo) {
+			function restyleLayer(color, featureInstanceLayer) {
 				
-				if (whatToDo == 'color') {
-					geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
-					
-						propertyValue = featureInstanceLayer.feature.properties.POSTCODE;
-
-						// Your function that determines a fill color for a particular
-						// property name and value.
-						var myFillColor = getColorViaZipArray(propertyValue);
-						if (myFillColor == "#BBC2C4"){ //grey zones, outside circle
-							featureInstanceLayer.setStyle({
-									fillColor: myFillColor,
-									weight: 1,
-									opacity: 0.2,
-									color: 'white',
-									dashArray: '1',
-									fillOpacity: 0.4
-								});
-						}
-						else {
-						
-							featureInstanceLayer.setStyle({
-								fillColor: myFillColor,
-								weight: 2,
-								opacity: 1,
-								color: 'white',
-								dashArray: '3',
-								fillOpacity: 0.5
-							});
-						}
-					});
-				}
-				//when resetting layer, everyting to gray
-				else if (whatToDo == 'reset') {
-					geoJson.eachLayer(function(featureInstanceLayer) { //loop through each polygon
-						featureInstanceLayer.setStyle({
-							fillColor: '#BBC2C4',
+				if (color == "#BBC2C4"){ //grey zones, outside circle
+					featureInstanceLayer.setStyle({
+							fillColor: color,
 							weight: 1,
 							opacity: 0.2,
 							color: 'white',
 							dashArray: '1',
 							fillOpacity: 0.4
 						});
+				}
+				else {
+					featureInstanceLayer.setStyle({
+						fillColor: color,
+						weight: 2,
+						opacity: 1,
+						color: 'white',
+						dashArray: '3',
+						fillOpacity: 0.5
 					});
+			
 				}
 			
 			}
 				
-			function getColorViaZipArray(zipCode) {
+			function getDistanceViaZipArray(zipCode) {
 				var result = $.grep(zipdata, function(e){ return e.Zipcode == zipCode; });
 				if (result[0].Price != 0){
 					return getColor(result[0].Price);
@@ -319,8 +304,8 @@
 				nmbrParcels = density;
 				str1 = Number(density).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").concat(str1);
 				document.getElementById('DensityShow').value = str1;
-				//recalculate density for each zipCode
-				recalculateDensity();
+				//recalculate density for each zipCode and recolor
+				recalculateDensityFromSlider();
 			}			
 
 			//catch slider change density
@@ -331,7 +316,7 @@
 			
 
 			 // load GeoJSON from an external file
-			 $.getJSON('/comeos/zipcodes_be.geojson',function(data){
+			 $.getJSON('/comeos/zipcodes_data_be.geojson',function(data){
 				// add GeoJSON layer to the map once the file is loaded
 				geoJson = L.geoJson(data,{style: style, onEachFeature:onEachFeature}).addTo(map);
 			});
