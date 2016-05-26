@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset=utf-8 />
-		<title>Leaflet Fullscreen</title>
+		<title>Cost distribution</title>
 		<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 		<script src='https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js'></script>
 		<script src="jquery-2.2.3.min.js"></script>
@@ -12,9 +12,9 @@
 			html, body, #map, .row-fluid{ height: 100%;}
 			#map-wrapper { width: 80%; height: 80%; position: relative; border: 1px solid black; left: 10%; top: 10%}
 			#map {width: 100%; height: 100%; background-color: white;}
-			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px; height: 520px}
+			#button-wrapper { position: absolute; top: 10px; right: 10px; width: 200px; border: 1px solid black; background-color: white; padding-bottom: 10px}
 			#legend-table { width: 120px; height: 30px; text-align: center; margin-top: 20px; margin-left:40px; border: 1px solid black } 
-			#value-table { width: 180px; height: 30px; text-align: center; margin-top: 20px; margin-left:10px } 
+			#value-table { width: 180px; height: 120px; text-align: center; margin-top: 20px; margin-left:10px } 
 			.btnStyle { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 150px; height: 30px; text-align: center; margin-top: 10px; margin-left:25px; font-family: Garamond; font-size: 15px}
 			.value-value { border-radius: 15px; background-color: #4D90FE;  border: 1px solid #3079ED; color: #FFFFFF; width: 80px; line-height:30px; height: 30px; text-align: center; margin-top: 10px; margin-left:50px; font-family: Garamond; font-size: 15px; font-weight: bold}
 			.legend-text {font-family: Garamond; font-size: 15px; font-weight: bold}
@@ -67,6 +67,8 @@
 						<div class="value-text">% of demand in radius:</div>
 						<div id="pct_demand_radius" class="value-value">0%</div>
 					</div>
+					<hr class="horiz-line">
+					<img src="/comeos/logo_ua.png" style="width:180px;height:54px;margin-left:10px;margin-top:10px">
 				</div>
 			</div>
 		</div>
@@ -176,10 +178,10 @@
 					restyleLayer(color,featureInstanceLayer);
 				});
 				
-				var pctParcelsRadius = parcelsInRadius/nmbrParcels;
+				var pctParcelsRadius = parcelsInRadius/nmbrParcels*100;
 				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML =  "€" + weightedCost.toFixed(2).toString();
-				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString() + "%";
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
 				
 			}
 			
@@ -222,7 +224,7 @@
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels*100;
 				var weightedCost = totalCostRadius/nmbrParcels;
 				document.getElementById("weight_cost_stop").innerHTML = "€" + weightedCost.toFixed(2).toString();
-				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(2).toString() + "%";
+				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
 			
 			}
 			
