@@ -89,6 +89,7 @@
 			//variables for showing value in html
 			var parcelsInRadius = 0;
 			var totalCostRadius = 0;
+			var totalShare = 0;
 			//var filePath = '/comeos/zipcodes_centroids_BE.csv';
 			var latMarker;
 			var lonMarker;
@@ -157,6 +158,7 @@
 			function findZipsInRadius() {
 				parcelsInRadius = 0;
 				totalCostRadius = 0;
+				totalShare = 0;				
 				zipdistance = [];//reset array with distances to zips.
 				geoJson.eachLayer(function(featureInstanceLayer) {
 					
@@ -188,7 +190,8 @@
 			
 			//calculate new density
 			function calculateDensityForColor(featureInstanceLayer,dist) {
-				
+				totalShare = totalShare + featureInstanceLayer.feature.properties.SHARE;
+				totalShare = 0;		
 				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				//count nmbr parcels in radius
 				parcelsInRadius = parcelsInRadius + newNmbrPcls;
