@@ -191,7 +191,7 @@
 			//calculate new density
 			function calculateDensityForColor(featureInstanceLayer,dist) {
 				totalShare = totalShare + featureInstanceLayer.feature.properties.SHARE;
-				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
+				var newNmbrPcls = Math.round(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				//count nmbr parcels in radius
 				parcelsInRadius = parcelsInRadius + newNmbrPcls;
 				var lineHaul = dist * C1 * C4 * 2 * newNmbrPcls / 100;
