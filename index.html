@@ -184,13 +184,12 @@
 				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML =  "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
-				console.log("totalcostradius, zipsradius: " + totalCostRadius);
+				console.log("totalcostradius, zipsradius: " + totalCostRadius + "parcels: " + parcelsInRadius);
 			}
 			
 			
 			//calculate new density
 			function calculateDensityForColor(featureInstanceLayer,dist) {
-				totalShare = totalShare + featureInstanceLayer.feature.properties.SHARE;
 				var newNmbrPcls = Math.round(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				//count nmbr parcels in radius
 				parcelsInRadius = parcelsInRadius + newNmbrPcls;
@@ -226,7 +225,7 @@
 				var weightedCost = totalCostRadius/nmbrParcels;
 				document.getElementById("weight_cost_stop").innerHTML = "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
-				console.log("totalcostradius, densityslider: " + totalCostRadius);
+				console.log("totalcostradius, densityslider: " + totalCostRadius + "parcels: " + parcelsInRadiusv);
 			
 			}
 			
