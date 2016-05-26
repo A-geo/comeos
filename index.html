@@ -191,7 +191,6 @@
 			//calculate new density
 			function calculateDensityForColor(featureInstanceLayer,dist) {
 				totalShare = totalShare + featureInstanceLayer.feature.properties.SHARE;
-				totalShare = 0;		
 				var newNmbrPcls = Math.ceil(featureInstanceLayer.feature.properties.SHARE * nmbrParcels);
 				//count nmbr parcels in radius
 				parcelsInRadius = parcelsInRadius + newNmbrPcls;
@@ -202,8 +201,6 @@
 				if (newNmbrPcls != 0) {
 					totalCostRadius = totalCostRadius + totalcost*newNmbrPcls;//adds the zipcodes share of total cost
 				}
-				console.log("totalDeliveries in zip: " + newNmbrPcls.toString() + ". price is: " + totalcost.toFixed(2).toString() + ". Linehaul is: " + lineHaul.toFixed(2).toString() + ". Lastmile: " + lastMile.toFixed(2).toString() + ". Vehicle cost: " + vehicleCost.toFixed(2).toString());
-				console.log("totalCostRadius : " + totalCostRadius.toString());
 				return getColor(totalcost);
 			}
 			
@@ -211,6 +208,7 @@
 			function recalculateDensityFromSlider() {
 				parcelsInRadius = 0;
 				totalCostRadius = 0;
+				totalShare = 0;		
 				geoJson.eachLayer(function(featureInstanceLayer) {
 				
 					var result = $.grep(zipdistance, function(e){ return e.Zipcode == featureInstanceLayer.feature.properties.POSTCODE; });
