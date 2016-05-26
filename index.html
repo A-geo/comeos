@@ -184,7 +184,7 @@
 				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML =  "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
-				
+				console.log("totalcostradius, zipsradius: " + totalCostRadius);
 			}
 			
 			
@@ -226,6 +226,7 @@
 				var weightedCost = totalCostRadius/nmbrParcels;
 				document.getElementById("weight_cost_stop").innerHTML = "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
+				console.log("totalcostradius, densityslider: " + totalCostRadius);
 			
 			}
 			
