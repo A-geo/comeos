@@ -184,7 +184,6 @@
 				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML =  "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
-				console.log("totalcostradius, zipsradius: " + totalCostRadius + "parcels: " + parcelsInRadius);
 			}
 			
 			
@@ -222,10 +221,9 @@
 				});
 				
 				var pctParcelsRadius = parcelsInRadius/nmbrParcels*100;
-				var weightedCost = totalCostRadius/nmbrParcels;
+				var weightedCost = totalCostRadius/parcelsInRadius;
 				document.getElementById("weight_cost_stop").innerHTML = "€" + weightedCost.toFixed(2).toString();
 				document.getElementById("pct_demand_radius").innerHTML = pctParcelsRadius.toFixed(0).toString() + "%";
-				console.log("totalcostradius, densityslider: " + totalCostRadius + "parcels: " + parcelsInRadius);
 			
 			}
 			
